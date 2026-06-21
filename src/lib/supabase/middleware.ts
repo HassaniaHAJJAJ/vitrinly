@@ -30,8 +30,14 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+  const publicDashboardPaths = [
+    "/dashboard/login",
+    "/dashboard/mot-de-passe-oublie",
+    "/dashboard/reinitialiser-mot-de-passe",
+  ];
   const isAdminRoute = path.startsWith("/admin") && path !== "/admin/login";
-  const isDashboardRoute = path.startsWith("/dashboard") && path !== "/dashboard/login";
+  const isDashboardRoute =
+    path.startsWith("/dashboard") && !publicDashboardPaths.includes(path);
 
   if (!user && (isAdminRoute || isDashboardRoute)) {
     const loginPath = isAdminRoute ? "/admin/login" : "/dashboard/login";
