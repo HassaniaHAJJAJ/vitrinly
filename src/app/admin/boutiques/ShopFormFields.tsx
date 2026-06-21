@@ -31,6 +31,8 @@ export function Field({
         placeholder={placeholder}
         minLength={minLength}
         defaultValue={defaultValue}
+        step={type === "number" ? "0.01" : undefined}
+        min={type === "number" ? 0 : undefined}
         className="rounded border px-3 py-2"
       />
       {hint && <p className="text-xs text-gray-500">{hint}</p>}

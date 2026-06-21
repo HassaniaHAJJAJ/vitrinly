@@ -4,6 +4,13 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 
+function parsePrice(value: FormDataEntryValue | null) {
+  const raw = String(value ?? "").trim().replace(",", ".");
+  if (!raw) return null;
+  const num = Number(raw);
+  return Number.isFinite(num) && num >= 0 ? num : null;
+}
+
 export async function createShop(formData: FormData) {
   await requireAdmin();
 
@@ -15,6 +22,8 @@ export async function createShop(formData: FormData) {
   const backgroundColor = String(formData.get("background_color") ?? "#ffffff");
   const paypalEmail = String(formData.get("paypal_email") ?? "").trim();
   const whatsappNumber = String(formData.get("whatsapp_number") ?? "").trim();
+  const mondialRelayPrice = parsePrice(formData.get("mondial_relay_price"));
+  const chronopostPrice = parsePrice(formData.get("chronopost_price"));
   const sellerEmail = String(formData.get("seller_email") ?? "").trim();
   const sellerPassword = String(formData.get("seller_password") ?? "");
   const logo = formData.get("logo");
@@ -50,6 +59,8 @@ export async function createShop(formData: FormData) {
       background_color: backgroundColor,
       paypal_email: paypalEmail || null,
       whatsapp_number: whatsappNumber || null,
+      mondial_relay_price: mondialRelayPrice,
+      chronopost_price: chronopostPrice,
       logo_url: logoUrl,
     })
     .select("id")

@@ -27,7 +27,7 @@ export default async function EditShopPage({
   const { data: shop } = await supabase
     .from("shops")
     .select(
-      "id, name, slug, logo_url, primary_color, title_color, text_color, background_color, paypal_email, whatsapp_number"
+      "id, name, slug, logo_url, primary_color, title_color, text_color, background_color, paypal_email, whatsapp_number, mondial_relay_price, chronopost_price"
     )
     .eq("id", shopId)
     .single();
@@ -111,6 +111,29 @@ export default async function EditShopPage({
           placeholder="+33612345678"
           defaultValue={shop.whatsapp_number ?? ""}
         />
+
+        <fieldset className="flex flex-col gap-4 rounded border p-4">
+          <legend className="px-1 text-sm font-medium text-gray-600">Frais de livraison</legend>
+          <p className="text-xs text-gray-500">
+            Laisse vide pour ne pas proposer ce mode de livraison aux acheteuses.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <Field
+              label="Mondial Relay (€)"
+              name="mondial_relay_price"
+              type="number"
+              placeholder="4.90"
+              defaultValue={shop.mondial_relay_price?.toString() ?? ""}
+            />
+            <Field
+              label="Chronopost (€)"
+              name="chronopost_price"
+              type="number"
+              placeholder="7.90"
+              defaultValue={shop.chronopost_price?.toString() ?? ""}
+            />
+          </div>
+        </fieldset>
 
         <button type="submit" className="rounded bg-black px-4 py-2 text-white">
           Enregistrer

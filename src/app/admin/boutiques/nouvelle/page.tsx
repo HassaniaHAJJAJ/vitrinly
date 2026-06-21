@@ -66,6 +66,27 @@ export default async function NewShopPage({
         </fieldset>
 
         <fieldset className="flex flex-col gap-4 rounded border p-4">
+          <legend className="px-1 text-sm font-medium text-gray-600">Frais de livraison</legend>
+          <p className="text-xs text-gray-500">
+            Laisse vide pour ne pas proposer ce mode de livraison aux acheteuses.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <Field
+              label="Mondial Relay (€)"
+              name="mondial_relay_price"
+              type="number"
+              placeholder="4.90"
+            />
+            <Field
+              label="Chronopost (€)"
+              name="chronopost_price"
+              type="number"
+              placeholder="7.90"
+            />
+          </div>
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-4 rounded border p-4">
           <legend className="px-1 text-sm font-medium text-gray-600">
             Compte de connexion cliente
           </legend>
