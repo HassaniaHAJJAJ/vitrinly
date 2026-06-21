@@ -3,6 +3,27 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin-client";
+import { slugify } from "@/lib/slugify";
+
+async function generateUniqueProductSlug(
+  admin: ReturnType<typeof createAdminClient>,
+  shopId: string,
+  name: string
+) {
+  const base = slugify(name) || "produit";
+  const { data: existing } = await admin
+    .from("products")
+    .select("slug")
+    .eq("shop_id", shopId)
+    .like("slug", `${base}%`);
+
+  const taken = new Set((existing ?? []).map((p) => p.slug));
+  if (!taken.has(base)) return base;
+
+  let suffix = 2;
+  while (taken.has(`${base}-${suffix}`)) suffix++;
+  return `${base}-${suffix}`;
+}
 
 export async function createProduct(shopId: string, formData: FormData) {
   await requireAdmin();
@@ -21,9 +42,12 @@ export async function createProduct(shopId: string, formData: FormData) {
 
   const admin = createAdminClient();
 
+  const productId = crypto.randomUUID();
+  const slug = await generateUniqueProductSlug(admin, shopId, name);
+
   const { data: product, error: productError } = await admin
     .from("products")
-    .insert({ shop_id: shopId, name, description: description || null, price })
+    .insert({ id: productId, shop_id: shopId, name, description: description || null, price, slug })
     .select("id")
     .single();
 
