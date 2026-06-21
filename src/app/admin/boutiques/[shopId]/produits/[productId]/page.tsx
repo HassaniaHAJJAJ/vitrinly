@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 import { VariantsEditor } from "../VariantsEditor";
@@ -101,10 +102,11 @@ export default async function EditProductPage({
             <div className="flex flex-wrap gap-3">
               {images.map((image) => (
                 <label key={image.id} className="flex flex-col items-center gap-1 text-xs">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={image.url}
                     alt=""
+                    width={80}
+                    height={80}
                     className="h-20 w-20 rounded border object-cover"
                   />
                   <span className="flex items-center gap-1">
