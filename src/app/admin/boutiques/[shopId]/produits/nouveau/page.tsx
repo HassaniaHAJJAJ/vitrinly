@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 import { VariantsEditor } from "../VariantsEditor";
+import { DescriptionField } from "../DescriptionField";
 import { createProduct } from "./actions";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -48,21 +49,16 @@ export default async function NewProductPage({
 
       <form action={createProductForShop} encType="multipart/form-data" className="flex flex-col gap-5">
         <div className="flex flex-col gap-1">
-          <label htmlFor="name" className="text-sm font-medium">
+          <label htmlFor="name" className="text-base font-semibold">
             Nom du produit *
           </label>
           <input id="name" name="name" required className="rounded border px-3 py-2" />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="description" className="text-sm font-medium">
-            Description
-          </label>
-          <textarea id="description" name="description" rows={4} className="rounded border px-3 py-2" />
-        </div>
+        <DescriptionField />
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="price" className="text-sm font-medium">
+          <label htmlFor="price" className="text-base font-semibold">
             Prix (€) *
           </label>
           <input
@@ -77,10 +73,17 @@ export default async function NewProductPage({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="photos" className="text-sm font-medium">
+          <label htmlFor="photos" className="text-base font-semibold">
             Photos
           </label>
-          <input id="photos" name="photos" type="file" accept="image/*" multiple />
+          <input
+            id="photos"
+            name="photos"
+            type="file"
+            accept="image/*"
+            multiple
+            className="file:mr-3 file:rounded file:border-0 file:bg-gray-200 file:px-3 file:py-1.5 file:text-sm file:text-gray-700 hover:file:bg-gray-300"
+          />
         </div>
 
         <VariantsEditor />

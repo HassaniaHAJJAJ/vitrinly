@@ -36,7 +36,7 @@ export function VariantsEditor({ initial }: { initial?: VariantRow[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm font-medium">Variantes (taille / couleur / stock)</p>
+      <p className="text-base font-semibold">Variantes (taille / couleur / stock)</p>
 
       {rows.map((row) => (
         <div key={row.key} className="flex items-center gap-2">
