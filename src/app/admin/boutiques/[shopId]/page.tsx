@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin-client";
 import { getStripe } from "@/lib/stripe";
 import { Field, ColorField } from "../ShopFormFields";
 import { CopyShopUrl } from "./CopyShopUrl";
-import { updateShop } from "./actions";
+import { updateShop, resetSellerPassword, changeSellerEmail } from "./actions";
 import { connectStripe } from "./stripe-actions";
 import { OpenStripeDashboardButton } from "./OpenStripeDashboardButton";
 
@@ -15,6 +15,12 @@ const ERROR_MESSAGES: Record<string, string> = {
   slug_taken: "Ce slug est déjà utilisé par une autre boutique.",
   shop: "Erreur lors de la mise à jour de la boutique.",
   logo_upload: "Erreur lors de l'envoi du logo.",
+  password_too_short: "Le mot de passe doit contenir au moins 6 caractères.",
+  no_seller_account: "Aucun compte cliente n'est rattaché à cette boutique.",
+  password_reset_failed: "Erreur lors de la réinitialisation du mot de passe.",
+  email_required: "Merci de renseigner un email.",
+  email_taken: "Cet email est déjà utilisé par un autre compte.",
+  email_change_failed: "Erreur lors du changement d'email.",
 };
 
 export default async function EditShopPage({
@@ -22,10 +28,15 @@ export default async function EditShopPage({
   searchParams,
 }: {
   params: Promise<{ shopId: string }>;
-  searchParams: Promise<{ error?: string; stripe_return?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    stripe_return?: string;
+    password_reset?: string;
+    email_changed?: string;
+  }>;
 }) {
   const { shopId } = await params;
-  const { error, stripe_return } = await searchParams;
+  const { error, stripe_return, password_reset, email_changed } = await searchParams;
   const { supabase } = await requireAdmin();
 
   const { data: shop } = await supabase
@@ -40,19 +51,33 @@ export default async function EditShopPage({
     notFound();
   }
 
+  const admin = createAdminClient();
+
   // After returning from Stripe-hosted onboarding, refresh the connected
   // account's status so the "connected" badge reflects reality immediately.
   if (stripe_return && shop.stripe_account_id && !shop.stripe_onboarding_complete) {
     const account = await getStripe().accounts.retrieve(shop.stripe_account_id);
     if (account.charges_enabled) {
-      const admin = createAdminClient();
       await admin.from("shops").update({ stripe_onboarding_complete: true }).eq("id", shopId);
       shop.stripe_onboarding_complete = true;
     }
   }
 
+  const { data: sellerProfile } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("shop_id", shopId)
+    .eq("role", "seller")
+    .single();
+
+  const sellerEmail = sellerProfile
+    ? (await admin.auth.admin.getUserById(sellerProfile.id)).data.user?.email
+    : null;
+
   const updateShopForItem = updateShop.bind(null, shop.id);
   const connectStripeForItem = connectStripe.bind(null, shop.id);
+  const resetSellerPasswordForItem = resetSellerPassword.bind(null, shop.id);
+  const changeSellerEmailForItem = changeSellerEmail.bind(null, shop.id);
 
   return (
     <main className="mx-auto max-w-xl px-4 py-10">
@@ -82,8 +107,62 @@ export default async function EditShopPage({
         </p>
       )}
 
+      {password_reset && (
+        <p className="mb-6 rounded bg-green-50 px-3 py-2 text-sm text-green-700">
+          Mot de passe mis à jour. Communique-le à la cliente.
+        </p>
+      )}
+
+      {email_changed && (
+        <p className="mb-6 rounded bg-green-50 px-3 py-2 text-sm text-green-700">
+          Email de connexion mis à jour. Communique-le à la cliente.
+        </p>
+      )}
+
       <fieldset className="mb-6 flex flex-col gap-3 rounded border p-4">
-        <legend className="px-1 text-sm font-medium text-gray-600">Paiement par carte (Stripe)</legend>
+        <legend className="px-1 text-sm font-medium text-gray-600">
+          Compte de connexion cliente
+        </legend>
+
+        <form action={changeSellerEmailForItem} className="flex gap-2">
+          <input
+            name="new_email"
+            type="email"
+            required
+            defaultValue={sellerEmail ?? ""}
+            placeholder="Email de connexion"
+            className="flex-1 rounded border px-3 py-2 text-sm"
+          />
+          <button type="submit" className="rounded bg-black px-4 py-2 text-sm text-white">
+            Modifier
+          </button>
+        </form>
+
+        <form action={resetSellerPasswordForItem} className="flex gap-2">
+          <input
+            name="new_password"
+            type="text"
+            required
+            minLength={6}
+            placeholder="Nouveau mot de passe"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            className="flex-1 rounded border px-3 py-2 text-sm"
+          />
+          <button type="submit" className="rounded bg-black px-4 py-2 text-sm text-white">
+            Réinitialiser
+          </button>
+        </form>
+        <p className="text-xs text-gray-500">
+          Définit un nouveau mot de passe pour le compte que la cliente utilise sur
+          vitrinly.fr/dashboard/login. Pense à le lui communiquer.
+        </p>
+      </fieldset>
+
+      <fieldset className="mb-6 flex flex-col gap-3 rounded border p-4">
+        <legend className="px-1 text-sm font-medium text-gray-600">Paiement en ligne (Stripe)</legend>
 
         {!shop.stripe_account_id && (
           <form action={connectStripeForItem}>

@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { ClearCartOnMount } from "./ClearCartOnMount";
+import { formatOrderNumber } from "@/lib/order-number";
 
 const ORDER_COLUMNS =
-  "id, buyer_firstname, buyer_name, buyer_email, total_price, shipping_method, shipping_price, created_at, order_items(product_name, size, color, quantity, unit_price)";
+  "id, order_number, buyer_firstname, buyer_name, buyer_email, total_price, shipping_method, shipping_price, created_at, order_items(product_name, size, color, quantity, unit_price)";
 
 async function findOrder(shopId: string, orderId?: string, sessionId?: string) {
   const admin = createAdminClient();
@@ -77,6 +78,11 @@ export default async function OrderConfirmationPage({
         <h1 className="text-2xl font-bold" style={{ color: shop.title_color }}>
           Merci {order?.buyer_firstname} 🎉
         </h1>
+        {order && (
+          <p className="mt-1 text-sm opacity-70">
+            Commande {formatOrderNumber(order.order_number, order.created_at)}
+          </p>
+        )}
         <p className="mt-2 opacity-70">
           {stillProcessing
             ? "Ton paiement a bien été reçu, ta commande est en cours d'enregistrement — actualise la page dans quelques secondes."

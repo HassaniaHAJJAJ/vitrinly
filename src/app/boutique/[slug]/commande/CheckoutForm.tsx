@@ -172,7 +172,7 @@ export function CheckoutForm({
           }}
           className="rounded bg-[#635bff] px-4 py-3 text-center text-sm font-medium text-white disabled:opacity-50"
         >
-          {redirectingToStripe ? "Redirection…" : "Payer par carte"}
+          {redirectingToStripe ? "Redirection…" : "Payer en ligne"}
         </button>
       )}
 

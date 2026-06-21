@@ -71,3 +71,70 @@ export async function updateShop(shopId: string, formData: FormData) {
 
   redirect("/admin");
 }
+
+export async function resetSellerPassword(shopId: string, formData: FormData) {
+  await requireAdmin();
+
+  const newPassword = String(formData.get("new_password") ?? "").trim();
+  if (newPassword.length < 6) {
+    redirect(`/admin/boutiques/${shopId}?error=password_too_short`);
+  }
+
+  const admin = createAdminClient();
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("shop_id", shopId)
+    .eq("role", "seller")
+    .single();
+
+  if (!profile) {
+    redirect(`/admin/boutiques/${shopId}?error=no_seller_account`);
+  }
+
+  const { error } = await admin.auth.admin.updateUserById(profile.id, {
+    password: newPassword,
+  });
+
+  if (error) {
+    redirect(`/admin/boutiques/${shopId}?error=password_reset_failed`);
+  }
+
+  redirect(`/admin/boutiques/${shopId}?password_reset=1`);
+}
+
+export async function changeSellerEmail(shopId: string, formData: FormData) {
+  await requireAdmin();
+
+  const newEmail = String(formData.get("new_email") ?? "").trim();
+  if (!newEmail) {
+    redirect(`/admin/boutiques/${shopId}?error=email_required`);
+  }
+
+  const admin = createAdminClient();
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("shop_id", shopId)
+    .eq("role", "seller")
+    .single();
+
+  if (!profile) {
+    redirect(`/admin/boutiques/${shopId}?error=no_seller_account`);
+  }
+
+  const { error } = await admin.auth.admin.updateUserById(profile.id, {
+    email: newEmail,
+    email_confirm: true,
+  });
+
+  if (error) {
+    redirect(
+      `/admin/boutiques/${shopId}?error=${error.message.includes("already") ? "email_taken" : "email_change_failed"}`
+    );
+  }
+
+  redirect(`/admin/boutiques/${shopId}?email_changed=1`);
+}
