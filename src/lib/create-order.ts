@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { resolveShippingPrice } from "@/lib/shipping";
+import { sendOrderEmails } from "@/lib/email";
+import { formatOrderNumber } from "@/lib/order-number";
 
 export type CheckoutItem = { productId: string; variantId: string; quantity: number };
 
@@ -34,7 +36,7 @@ export async function createOrderFromItems(
 
   const { data: shop } = await admin
     .from("shops")
-    .select("id, mondial_relay_price, chronopost_price")
+    .select("id, name, mondial_relay_price, chronopost_price")
     .eq("slug", shopSlug)
     .single();
 
@@ -95,7 +97,7 @@ export async function createOrderFromItems(
       paypal_order_id: payment.provider === "paypal" ? payment.paypalOrderId : null,
       stripe_session_id: payment.provider === "stripe" ? payment.stripeSessionId : null,
     })
-    .select("id")
+    .select("id, order_number, created_at")
     .single();
 
   if (orderError || !order) {
@@ -105,6 +107,43 @@ export async function createOrderFromItems(
   await admin
     .from("order_items")
     .insert(orderItemsToInsert.map((item) => ({ ...item, order_id: order.id })));
+
+  // Best-effort: notification emails should never block order creation,
+  // which has already succeeded by this point.
+  try {
+    const { data: sellerProfile } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("shop_id", shop.id)
+      .eq("role", "seller")
+      .single();
+
+    const sellerEmail = sellerProfile
+      ? (await admin.auth.admin.getUserById(sellerProfile.id)).data.user?.email ?? null
+      : null;
+
+    await sendOrderEmails(
+      {
+        orderId: order.id,
+        orderNumber: formatOrderNumber(order.order_number, order.created_at),
+        shopName: shop.name,
+        buyerFirstname: buyer.firstname,
+        buyerName: buyer.name,
+        buyerEmail: buyer.email,
+        buyerPhone: buyer.phone,
+        buyerAddress: buyer.address,
+        buyerZip: buyer.zip,
+        buyerCity: buyer.city,
+        items: orderItemsToInsert,
+        shippingMethod,
+        shippingPrice,
+        totalPrice: total + shippingPrice,
+      },
+      sellerEmail
+    );
+  } catch (err) {
+    console.error("Order confirmation emails failed", err);
+  }
 
   return order.id as string;
 }
