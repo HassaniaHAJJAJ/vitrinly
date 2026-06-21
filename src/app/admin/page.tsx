@@ -34,19 +34,20 @@ export default async function AdminPage() {
       ) : (
         <ul className="flex flex-col gap-3">
           {shops.map((shop) => (
-            <li key={shop.id}>
+            <li key={shop.id} className="flex items-center justify-between rounded border px-4 py-3">
+              <Link href={`/admin/boutiques/${shop.id}`} className="flex items-center gap-3 hover:underline">
+                <span
+                  className="h-3 w-3 rounded-full"
+                  style={{ backgroundColor: shop.primary_color }}
+                />
+                {shop.name}
+                <span className="text-sm text-gray-500">/boutique/{shop.slug}</span>
+              </Link>
               <Link
                 href={`/admin/boutiques/${shop.id}/produits`}
-                className="flex items-center justify-between rounded border px-4 py-3 hover:bg-gray-50"
+                className="whitespace-nowrap rounded bg-black px-3 py-1.5 text-sm text-white"
               >
-                <span className="flex items-center gap-3">
-                  <span
-                    className="h-3 w-3 rounded-full"
-                    style={{ backgroundColor: shop.primary_color }}
-                  />
-                  {shop.name}
-                </span>
-                <span className="text-sm text-gray-500">/boutique/{shop.slug}</span>
+                Produits →
               </Link>
             </li>
           ))}

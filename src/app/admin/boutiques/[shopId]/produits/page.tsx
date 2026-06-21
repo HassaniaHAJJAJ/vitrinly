@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 
@@ -32,14 +33,19 @@ export default async function ShopProductsAdminPage({
         ← Toutes les boutiques
       </Link>
 
-      <div className="mb-6 mt-2 flex items-center justify-between">
+      <div className="mb-6 mt-2 flex items-center justify-between gap-6">
         <h1 className="text-2xl font-semibold">Produits — {shop.name}</h1>
-        <Link
-          href={`/admin/boutiques/${shop.id}/produits/nouveau`}
-          className="rounded bg-black px-4 py-2 text-sm text-white"
-        >
-          Nouveau produit
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href={`/admin/boutiques/${shop.id}`} className="whitespace-nowrap text-sm underline">
+            Modifier la boutique
+          </Link>
+          <Link
+            href={`/admin/boutiques/${shop.id}/produits/nouveau`}
+            className="whitespace-nowrap rounded bg-black px-4 py-2 text-sm text-white"
+          >
+            Nouveau produit
+          </Link>
+        </div>
       </div>
 
       {!products || products.length === 0 ? (
@@ -58,14 +64,9 @@ export default async function ShopProductsAdminPage({
                   href={`/admin/boutiques/${shop.id}/produits/${product.id}`}
                   className="flex items-center gap-4 rounded border px-4 py-3 hover:bg-gray-50"
                 >
-                  <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded bg-gray-100">
+                  <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded bg-gray-100">
                     {thumbnail && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={thumbnail}
-                        alt={product.name}
-                        className="h-full w-full object-cover"
-                      />
+                      <Image src={thumbnail} alt={product.name} fill sizes="56px" className="object-cover" />
                     )}
                   </div>
                   <div className="flex flex-1 items-center justify-between">
