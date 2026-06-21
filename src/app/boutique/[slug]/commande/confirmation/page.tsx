@@ -2,16 +2,52 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin-client";
+import { ClearCartOnMount } from "./ClearCartOnMount";
+
+const ORDER_COLUMNS =
+  "id, buyer_firstname, buyer_name, buyer_email, total_price, shipping_method, shipping_price, created_at, order_items(product_name, size, color, quantity, unit_price)";
+
+async function findOrder(shopId: string, orderId?: string, sessionId?: string) {
+  const admin = createAdminClient();
+
+  if (orderId) {
+    const { data } = await admin
+      .from("orders")
+      .select(ORDER_COLUMNS)
+      .eq("id", orderId)
+      .eq("shop_id", shopId)
+      .single();
+    return data;
+  }
+
+  if (!sessionId) return null;
+
+  // The Stripe webhook creates the order asynchronously and may land a
+  // moment after the buyer is redirected back here, so retry briefly.
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const { data } = await admin
+      .from("orders")
+      .select(ORDER_COLUMNS)
+      .eq("stripe_session_id", sessionId)
+      .eq("shop_id", shopId)
+      .maybeSingle();
+
+    if (data) return data;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  return null;
+}
 
 export default async function OrderConfirmationPage({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ order?: string }>;
+  searchParams: Promise<{ order?: string; session_id?: string }>;
 }) {
   const { slug } = await params;
-  const { order: orderId } = await searchParams;
+  const { order: orderId, session_id: sessionId } = await searchParams;
   const supabase = await createClient();
 
   const { data: shop } = await supabase
@@ -25,31 +61,26 @@ export default async function OrderConfirmationPage({
   }
 
   // Buyers aren't authenticated, so RLS blocks the anon client from reading
-  // orders. The order id (UUID, unguessable) is enough to safely look it up
-  // here for the confirmation page only.
-  const admin = createAdminClient();
-  const { data: order } = orderId
-    ? await admin
-        .from("orders")
-        .select(
-          "id, buyer_firstname, buyer_name, buyer_email, total_price, shipping_method, shipping_price, created_at, order_items(product_name, size, color, quantity, unit_price)"
-        )
-        .eq("id", orderId)
-        .eq("shop_id", shop.id)
-        .single()
-    : { data: null };
+  // orders. The order id / Stripe session id (both unguessable) are enough
+  // to safely look the order up here for the confirmation page only.
+  const order = await findOrder(shop.id, orderId, sessionId);
+  const stillProcessing = !order && Boolean(sessionId);
 
   return (
     <div
       className="min-h-screen"
       style={{ backgroundColor: shop.background_color, color: shop.text_color }}
     >
+      <ClearCartOnMount shopSlug={shop.slug} />
+
       <main className="mx-auto max-w-xl px-4 py-10 text-center">
         <h1 className="text-2xl font-bold" style={{ color: shop.title_color }}>
           Merci {order?.buyer_firstname} 🎉
         </h1>
         <p className="mt-2 opacity-70">
-          Ta commande a bien été reçue. {shop.name} va la préparer rapidement.
+          {stillProcessing
+            ? "Ton paiement a bien été reçu, ta commande est en cours d'enregistrement — actualise la page dans quelques secondes."
+            : `Ta commande a bien été reçue. ${shop.name} va la préparer rapidement.`}
         </p>
 
         {order && (

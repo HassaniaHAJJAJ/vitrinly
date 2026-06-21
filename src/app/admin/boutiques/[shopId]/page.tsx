@@ -2,9 +2,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/require-admin";
+import { createAdminClient } from "@/lib/supabase/admin-client";
+import { getStripe } from "@/lib/stripe";
 import { Field, ColorField } from "../ShopFormFields";
 import { CopyShopUrl } from "./CopyShopUrl";
 import { updateShop } from "./actions";
+import { connectStripe } from "./stripe-actions";
+import { OpenStripeDashboardButton } from "./OpenStripeDashboardButton";
 
 const ERROR_MESSAGES: Record<string, string> = {
   missing_fields: "Merci de remplir le nom et le slug.",
@@ -18,16 +22,16 @@ export default async function EditShopPage({
   searchParams,
 }: {
   params: Promise<{ shopId: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; stripe_return?: string }>;
 }) {
   const { shopId } = await params;
-  const { error } = await searchParams;
+  const { error, stripe_return } = await searchParams;
   const { supabase } = await requireAdmin();
 
   const { data: shop } = await supabase
     .from("shops")
     .select(
-      "id, name, slug, logo_url, primary_color, title_color, text_color, background_color, paypal_email, whatsapp_number, mondial_relay_price, chronopost_price"
+      "id, name, slug, logo_url, primary_color, title_color, text_color, background_color, paypal_email, whatsapp_number, mondial_relay_price, chronopost_price, stripe_account_id, stripe_onboarding_complete"
     )
     .eq("id", shopId)
     .single();
@@ -36,7 +40,19 @@ export default async function EditShopPage({
     notFound();
   }
 
+  // After returning from Stripe-hosted onboarding, refresh the connected
+  // account's status so the "connected" badge reflects reality immediately.
+  if (stripe_return && shop.stripe_account_id && !shop.stripe_onboarding_complete) {
+    const account = await getStripe().accounts.retrieve(shop.stripe_account_id);
+    if (account.charges_enabled) {
+      const admin = createAdminClient();
+      await admin.from("shops").update({ stripe_onboarding_complete: true }).eq("id", shopId);
+      shop.stripe_onboarding_complete = true;
+    }
+  }
+
   const updateShopForItem = updateShop.bind(null, shop.id);
+  const connectStripeForItem = connectStripe.bind(null, shop.id);
 
   return (
     <main className="mx-auto max-w-xl px-4 py-10">
@@ -65,6 +81,43 @@ export default async function EditShopPage({
           {ERROR_MESSAGES[error] ?? "Une erreur est survenue."}
         </p>
       )}
+
+      <fieldset className="mb-6 flex flex-col gap-3 rounded border p-4">
+        <legend className="px-1 text-sm font-medium text-gray-600">Paiement par carte (Stripe)</legend>
+
+        {!shop.stripe_account_id && (
+          <form action={connectStripeForItem}>
+            <button type="submit" className="rounded bg-[#635bff] px-4 py-2 text-sm text-white">
+              Connecter Stripe
+            </button>
+          </form>
+        )}
+
+        {shop.stripe_account_id && !shop.stripe_onboarding_complete && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-amber-700">Configuration Stripe non terminée.</p>
+            <form action={connectStripeForItem}>
+              <button type="submit" className="rounded bg-[#635bff] px-4 py-2 text-sm text-white">
+                Continuer la configuration
+              </button>
+            </form>
+          </div>
+        )}
+
+        {shop.stripe_account_id && shop.stripe_onboarding_complete && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-green-700">Stripe connecté ✓</p>
+            <OpenStripeDashboardButton shopId={shop.id} />
+          </div>
+        )}
+
+        <p className="rounded bg-blue-50 px-3 py-2 text-xs text-blue-900">
+          Stripe prélève environ <strong>1,5 % + 0,25 €</strong> par vente (cartes européennes),
+          généralement moins cher que PayPal. Exemple : pour une commande de 50 €, la cliente
+          reçoit environ <strong>49 €</strong> (50 € − 1 € de frais). L&apos;argent est ensuite
+          versé automatiquement sur son compte bancaire.
+        </p>
+      </fieldset>
 
       <form action={updateShopForItem} encType="multipart/form-data" className="flex flex-col gap-5">
         <Field label="Nom de la boutique" name="name" required defaultValue={shop.name} />
@@ -100,17 +153,26 @@ export default async function EditShopPage({
         </div>
 
         <Field
-          label="Email PayPal de la cliente"
-          name="paypal_email"
-          type="email"
-          defaultValue={shop.paypal_email ?? ""}
-        />
-        <Field
           label="Numéro WhatsApp"
           name="whatsapp_number"
           placeholder="+33612345678"
           defaultValue={shop.whatsapp_number ?? ""}
         />
+
+        <fieldset className="flex flex-col gap-3 rounded border p-4">
+          <legend className="px-1 text-sm font-medium text-gray-600">Paiement par PayPal</legend>
+          <Field
+            label="Email PayPal de la cliente"
+            name="paypal_email"
+            type="email"
+            defaultValue={shop.paypal_email ?? ""}
+            hint="Compte PayPal Business obligatoire (gratuit à créer, pas d'abonnement) — PayPal refuse de recevoir des paiements de tiers sur un compte Personal."
+          />
+          <p className="rounded bg-blue-50 px-3 py-2 text-xs text-blue-900">
+            PayPal prélève environ <strong>2,9 % + 0,35 €</strong> par vente. Exemple : pour une
+            commande de 50 €, la cliente reçoit environ <strong>48,20 €</strong> (50 € − 1,80 € de frais).
+          </p>
+        </fieldset>
 
         <fieldset className="flex flex-col gap-4 rounded border p-4">
           <legend className="px-1 text-sm font-medium text-gray-600">Frais de livraison</legend>

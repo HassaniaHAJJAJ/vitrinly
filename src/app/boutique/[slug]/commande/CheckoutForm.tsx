@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { type CartItem, cartTotal, getCart, saveCart } from "@/lib/cart";
+import { type CartItem, cartTotal, getCart } from "@/lib/cart";
 
 type Buyer = {
   firstname: string;
@@ -36,16 +36,19 @@ export function CheckoutForm({
   shopSlug,
   accentColor,
   shippingOptions,
+  stripeAvailable,
 }: {
   shopSlug: string;
   accentColor: string;
   shippingOptions: Partial<Record<ShippingMethod, number | null>>;
+  stripeAvailable: boolean;
 }) {
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
   const [buyer, setBuyer] = useState<Buyer>(EMPTY_BUYER);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [redirectingToStripe, setRedirectingToStripe] = useState(false);
 
   const availableShippingMethods = (Object.keys(SHIPPING_LABELS) as ShippingMethod[]).filter(
     (method) => shippingOptions[method] != null
@@ -132,11 +135,48 @@ export function CheckoutForm({
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      {!paypalClientId ? (
+      {!paypalClientId && !stripeAvailable && (
         <p className="rounded bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
-          Le paiement PayPal n&apos;est pas encore configuré pour cette boutique.
+          Le paiement n&apos;est pas encore configuré pour cette boutique.
         </p>
-      ) : (
+      )}
+
+      {stripeAvailable && (
+        <button
+          type="button"
+          disabled={!readyToPay || redirectingToStripe}
+          onClick={async () => {
+            setError(null);
+            setRedirectingToStripe(true);
+            const res = await fetch("/api/checkout/stripe", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                shopSlug,
+                items: items.map((i) => ({
+                  productId: i.productId,
+                  variantId: i.variantId,
+                  quantity: i.quantity,
+                })),
+                shippingMethod: shippingMethod || null,
+                buyer,
+              }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.url) {
+              setError("Impossible de démarrer le paiement par carte. Réessaie.");
+              setRedirectingToStripe(false);
+              return;
+            }
+            window.location.href = data.url;
+          }}
+          className="rounded bg-[#635bff] px-4 py-3 text-center text-sm font-medium text-white disabled:opacity-50"
+        >
+          {redirectingToStripe ? "Redirection…" : "Payer par carte"}
+        </button>
+      )}
+
+      {paypalClientId && (
         <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "EUR" }}>
           <PayPalButtons
             disabled={!readyToPay}
@@ -180,7 +220,6 @@ export function CheckoutForm({
                 return;
               }
 
-              saveCart(shopSlug, []);
               router.push(`/boutique/${shopSlug}/commande/confirmation?order=${result.orderId}`);
             }}
             onError={() => setError("Une erreur est survenue pendant le paiement.")}

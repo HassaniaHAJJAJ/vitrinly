@@ -61,8 +61,25 @@ export default async function NewShopPage({
             </label>
             <input id="logo" name="logo" type="file" accept="image/*" />
           </div>
-          <Field label="Email PayPal de la cliente" name="paypal_email" type="email" />
           <Field label="Numéro WhatsApp" name="whatsapp_number" placeholder="+33612345678" />
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-3 rounded border p-4">
+          <legend className="px-1 text-sm font-medium text-gray-600">Paiement par PayPal</legend>
+          <Field
+            label="Email PayPal de la cliente"
+            name="paypal_email"
+            type="email"
+            hint="Compte PayPal Business obligatoire (gratuit à créer, pas d'abonnement) — PayPal refuse de recevoir des paiements de tiers sur un compte Personal."
+          />
+          <p className="rounded bg-blue-50 px-3 py-2 text-xs text-blue-900">
+            PayPal prélève environ <strong>2,9 % + 0,35 €</strong> par vente. Exemple : pour une
+            commande de 50 €, la cliente reçoit environ <strong>48,20 €</strong> (50 € − 1,80 € de frais).
+          </p>
+          <p className="text-xs text-gray-500">
+            La connexion Stripe (paiement par carte, frais plus bas) pourra être faite une fois la
+            boutique créée, depuis sa fiche.
+          </p>
         </fieldset>
 
         <fieldset className="flex flex-col gap-4 rounded border p-4">

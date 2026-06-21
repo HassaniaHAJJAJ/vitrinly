@@ -14,7 +14,7 @@ export default async function CheckoutPage({
   const { data: shop } = await supabase
     .from("shops")
     .select(
-      "slug, name, primary_color, title_color, text_color, background_color, mondial_relay_price, chronopost_price"
+      "slug, name, primary_color, title_color, text_color, background_color, mondial_relay_price, chronopost_price, stripe_onboarding_complete"
     )
     .eq("slug", slug)
     .single();
@@ -44,6 +44,7 @@ export default async function CheckoutPage({
             mondial_relay: shop.mondial_relay_price,
             chronopost: shop.chronopost_price,
           }}
+          stripeAvailable={shop.stripe_onboarding_complete}
         />
       </main>
     </div>
