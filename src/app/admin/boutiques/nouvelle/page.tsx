@@ -40,16 +40,18 @@ export default async function NewShopPage({
             placeholder="leila-mode"
             hint="Boutique visible sur vitrinly.fr/boutique/leila-mode"
           />
-          <div className="flex flex-col gap-1">
-            <label htmlFor="primary_color" className="text-sm font-medium">
-              Couleur principale
-            </label>
-            <input
-              id="primary_color"
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <ColorField
+              label="Boutons / accents"
               name="primary_color"
-              type="color"
               defaultValue="#000000"
-              className="h-10 w-16 rounded border"
+            />
+            <ColorField label="Titres" name="title_color" defaultValue="#000000" />
+            <ColorField label="Texte" name="text_color" defaultValue="#1f1f1f" />
+            <ColorField
+              label="Fond"
+              name="background_color"
+              defaultValue="#ffffff"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -118,6 +120,31 @@ function Field({
         className="rounded border px-3 py-2"
       />
       {hint && <p className="text-xs text-gray-500">{hint}</p>}
+    </div>
+  );
+}
+
+function ColorField({
+  label,
+  name,
+  defaultValue,
+}: {
+  label: string;
+  name: string;
+  defaultValue: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={name} className="text-sm font-medium">
+        {label}
+      </label>
+      <input
+        id={name}
+        name={name}
+        type="color"
+        defaultValue={defaultValue}
+        className="h-10 w-16 rounded border"
+      />
     </div>
   );
 }

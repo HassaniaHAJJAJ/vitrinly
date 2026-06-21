@@ -10,6 +10,9 @@ export async function createShop(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
   const primaryColor = String(formData.get("primary_color") ?? "#000000");
+  const titleColor = String(formData.get("title_color") ?? "#000000");
+  const textColor = String(formData.get("text_color") ?? "#1f1f1f");
+  const backgroundColor = String(formData.get("background_color") ?? "#ffffff");
   const paypalEmail = String(formData.get("paypal_email") ?? "").trim();
   const whatsappNumber = String(formData.get("whatsapp_number") ?? "").trim();
   const sellerEmail = String(formData.get("seller_email") ?? "").trim();
@@ -42,6 +45,9 @@ export async function createShop(formData: FormData) {
       name,
       slug,
       primary_color: primaryColor,
+      title_color: titleColor,
+      text_color: textColor,
+      background_color: backgroundColor,
       paypal_email: paypalEmail || null,
       whatsapp_number: whatsappNumber || null,
       logo_url: logoUrl,
