@@ -37,14 +37,14 @@ export default async function ShopPage({
     >
       <CartLink shopSlug={shop.slug} accentColor={shop.primary_color} />
 
-      <header className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+      <header className="flex items-center justify-center gap-4 px-4 py-10">
         {shop.logo_url && (
           <Image
             src={shop.logo_url}
             alt={shop.name}
-            width={80}
-            height={80}
-            className="h-20 w-20 rounded-full object-cover"
+            width={120}
+            height={120}
+            className="h-28 w-28 rounded-full object-cover"
             priority
           />
         )}

@@ -19,7 +19,7 @@ export function Field({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={name} className="text-sm font-medium">
+      <label htmlFor={name} className="text-sm font-semibold">
         {label}
         {required && " *"}
       </label>
@@ -51,7 +51,7 @@ export function ColorField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={name} className="text-sm font-medium">
+      <label htmlFor={name} className="text-sm font-semibold">
         {label}
       </label>
       <input

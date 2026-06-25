@@ -1,11 +1,11 @@
 import { requireSeller } from "@/lib/supabase/require-seller";
-import { logoutSeller } from "./login/actions";
 import { OrdersList } from "./OrdersList";
+import { DashboardNav } from "./DashboardNav";
 
 export default async function DashboardPage() {
   const { supabase, shopId } = await requireSeller();
 
-  const { data: shop } = await supabase.from("shops").select("name").eq("id", shopId).single();
+  const { data: shop } = await supabase.from("shops").select("name, slug, logo_url").eq("id", shopId).single();
 
   const { data: orders } = await supabase
     .from("orders")
@@ -15,14 +15,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <div className="mb-6 flex items-center justify-between gap-6">
-        <h1 className="text-2xl font-semibold">Commandes — {shop?.name}</h1>
-        <form action={logoutSeller}>
-          <button type="submit" className="text-sm text-gray-500 underline">
-            Déconnexion
-          </button>
-        </form>
-      </div>
+      <DashboardNav shopName={shop?.name ?? ""} logoUrl={shop?.logo_url} shopSlug={shop?.slug} />
 
       {!orders || orders.length === 0 ? (
         <p className="text-gray-500">Aucune commande pour le moment.</p>
