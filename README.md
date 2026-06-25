@@ -1,6 +1,6 @@
 # Vitrinly
 
-Plateforme multi-boutiques pour commerçantes de mode sans site web : catalogue, panier, paiement PayPal, espace cliente et back-office admin.
+Plateforme multi-boutiques pour commerçantes sans site web : catalogue, panier, paiement PayPal, espace cliente et back-office admin.
 
 ## Stack
 
