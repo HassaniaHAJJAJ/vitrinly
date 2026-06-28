@@ -1,9 +1,9 @@
-import Link from "next/link";
-import Image from "next/image";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AddToCartForm } from "./AddToCartForm";
 import { CartLink } from "../../CartLink";
+import { WhatsAppButton } from "../../WhatsAppButton";
 
 export default async function ProductPage({
   params,
@@ -15,7 +15,7 @@ export default async function ProductPage({
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("id, slug, name, primary_color, title_color, text_color, background_color")
+    .select("id, slug, name, primary_color, title_color, text_color, background_color, whatsapp_number")
     .eq("slug", slug)
     .single();
 
@@ -38,77 +38,66 @@ export default async function ProductPage({
 
   const images = [...(product.product_images ?? [])].sort((a, b) => a.position - b.position);
 
+  const { data: reviews } = await supabase
+    .from("reviews")
+    .select("id, buyer_name, rating, comment, submitted_at")
+    .eq("product_id", product.id)
+    .eq("status", "approved")
+    .order("submitted_at", { ascending: false });
+
   return (
     <div
       className="min-h-screen"
       style={{ backgroundColor: shop.background_color, color: shop.text_color }}
     >
       <CartLink shopSlug={shop.slug} accentColor={shop.primary_color} />
+      {shop.whatsapp_number && (
+        <WhatsAppButton number={shop.whatsapp_number} shopName={shop.name} />
+      )}
 
       <main className="mx-auto max-w-4xl px-4 py-10">
-        <Link
-          href={`/boutique/${shop.slug}`}
-          className="text-sm underline opacity-70"
-        >
-          ← {shop.name}
-        </Link>
+        <BackLink href={`/boutique/${shop.slug}`}>{shop.name}</BackLink>
 
-        <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2">
-          <div className="flex flex-col gap-3">
-            <div className="relative aspect-square overflow-hidden rounded-lg bg-black/5">
-              {images[0] && (
-                <Image
-                  src={images[0].url}
-                  alt={product.name}
-                  fill
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                  className="object-cover"
-                  priority
-                />
-              )}
-            </div>
-            {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
-                {images.slice(1).map((image) => (
-                  <Image
-                    key={image.url}
-                    src={image.url}
-                    alt={product.name}
-                    width={80}
-                    height={80}
-                    className="h-20 w-20 flex-shrink-0 rounded object-cover"
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <h1 className="text-2xl font-bold" style={{ color: shop.title_color }}>
-              {product.name}
-            </h1>
-            <p className="text-xl font-semibold" style={{ color: shop.primary_color }}>
-              {product.price} €
-            </p>
-
-            {product.description && (
-              <div
-                className="text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
-            )}
-
-            <AddToCartForm
-              shopSlug={shop.slug}
-              productId={product.id}
-              name={product.name}
-              price={product.price}
-              image={images[0]?.url ?? null}
-              variants={product.variants ?? []}
-              accentColor={shop.primary_color}
-            />
-          </div>
+        <div className="mt-4 flex flex-col gap-2 md:hidden">
+          <h1 className="text-2xl font-bold" style={{ color: shop.title_color }}>{product.name}</h1>
+          <p className="text-xl font-semibold" style={{ color: shop.primary_color }}>{product.price} €</p>
         </div>
+
+        <AddToCartForm
+          shopSlug={shop.slug}
+          productId={product.id}
+          name={product.name}
+          price={product.price}
+          images={images}
+          variants={product.variants ?? []}
+          accentColor={shop.primary_color}
+          titleColor={shop.title_color}
+          description={product.description ?? null}
+        />
+        {/* Avis clients */}
+        {reviews && reviews.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-lg font-semibold mb-4" style={{ color: shop.title_color }}>
+              Avis clients ({reviews.length})
+            </h2>
+            <div className="space-y-4">
+              {reviews.map((r) => (
+                <div key={r.id} className="rounded-lg border p-4" style={{ borderColor: `${shop.primary_color}20` }}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium">{r.buyer_name}</span>
+                    <span className="text-yellow-400 text-sm">
+                      {"★".repeat(r.rating)}
+                      <span style={{ opacity: 0.2 }}>{"★".repeat(5 - r.rating)}</span>
+                    </span>
+                  </div>
+                  {r.comment && (
+                    <p className="text-sm leading-relaxed" style={{ opacity: 0.75 }}>{r.comment}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

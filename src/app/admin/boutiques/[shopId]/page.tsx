@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/require-admin";
@@ -81,9 +82,7 @@ export default async function EditShopPage({
 
   return (
     <main className="mx-auto max-w-xl px-4 py-10">
-      <Link href="/admin" className="text-sm text-gray-500 underline">
-        ← Toutes les boutiques
-      </Link>
+      <BackLink href="/admin">Toutes les boutiques</BackLink>
 
       <div className="mb-6 mt-2 flex items-center justify-between gap-6">
         <h1 className="text-2xl font-semibold">Modifier {shop.name}</h1>
@@ -157,7 +156,7 @@ export default async function EditShopPage({
         </form>
         <p className="text-xs text-gray-500">
           Définit un nouveau mot de passe pour le compte que la cliente utilise sur
-          vitrinly.fr/dashboard/login. Pense à le lui communiquer.
+          vitrineasy.fr/dashboard/login. Pense à le lui communiquer.
         </p>
       </fieldset>
 
@@ -198,14 +197,14 @@ export default async function EditShopPage({
         </p>
       </fieldset>
 
-      <form action={updateShopForItem} encType="multipart/form-data" className="flex flex-col gap-5">
+      <form action={updateShopForItem} className="flex flex-col gap-5">
         <Field label="Nom de la boutique" name="name" required defaultValue={shop.name} />
         <Field
           label="Slug (URL)"
           name="slug"
           required
           defaultValue={shop.slug}
-          hint="Boutique visible sur vitrinly.fr/boutique/leila-mode"
+          hint="Boutique visible sur vitrineasy.fr/boutique/leila-mode"
         />
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -245,7 +244,7 @@ export default async function EditShopPage({
             name="paypal_email"
             type="email"
             defaultValue={shop.paypal_email ?? ""}
-            hint="Compte PayPal Business obligatoire (gratuit à créer, pas d'abonnement) — PayPal refuse de recevoir des paiements de tiers sur un compte Personal."
+            hint="Compte PayPal Business obligatoire (gratuit à créer, pas d'abonnement) ; PayPal refuse de recevoir des paiements de tiers sur un compte Personal."
           />
           <p className="rounded bg-blue-50 px-3 py-2 text-xs text-blue-900">
             PayPal prélève environ <strong>2,9 % + 0,35 €</strong> par vente. Exemple : pour une

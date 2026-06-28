@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin-client";
+import { safeFilename } from "@/lib/slugify";
 
 export async function updateProduct(shopId: string, productId: string, formData: FormData) {
   await requireAdmin();
@@ -47,7 +48,7 @@ export async function updateProduct(shopId: string, productId: string, formData:
     const imageRows = [];
     for (let i = 0; i < newPhotos.length; i++) {
       const photo = newPhotos[i];
-      const path = `${shopId}/products/${productId}/${Date.now()}-${i}-${photo.name}`;
+      const path = `${shopId}/products/${productId}/${Date.now()}-${i}-${safeFilename(photo.name)}`;
       const { error: uploadError } = await admin.storage
         .from("shop-assets")
         .upload(path, photo, { contentType: photo.type });
@@ -72,7 +73,7 @@ export async function updateProduct(shopId: string, productId: string, formData:
       color: colors[i] ?? "",
       stock: Number.isFinite(stocks[i]) ? stocks[i] : 0,
     }))
-    .filter((v) => v.size && v.color);
+    .filter((v) => v.size || v.color);
 
   if (variantRows.length > 0) {
     await admin.from("variants").insert(variantRows);

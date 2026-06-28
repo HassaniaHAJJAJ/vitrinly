@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { ClearCartOnMount } from "./ClearCartOnMount";
+import { AwardPoints } from "./AwardPoints";
 import { formatOrderNumber } from "@/lib/order-number";
 
 const ORDER_COLUMNS =
@@ -73,6 +74,7 @@ export default async function OrderConfirmationPage({
       style={{ backgroundColor: shop.background_color, color: shop.text_color }}
     >
       <ClearCartOnMount shopSlug={shop.slug} />
+      {order && <AwardPoints orderId={order.id} shopId={shop.id} shopSlug={shop.slug} />}
 
       <main className="mx-auto max-w-xl px-4 py-10 text-center">
         <h1 className="text-2xl font-bold" style={{ color: shop.title_color }}>
@@ -85,7 +87,7 @@ export default async function OrderConfirmationPage({
         )}
         <p className="mt-2 opacity-70">
           {stillProcessing
-            ? "Ton paiement a bien été reçu, ta commande est en cours d'enregistrement — actualise la page dans quelques secondes."
+            ? "Ton paiement a bien été reçu, ta commande est en cours d'enregistrement, actualise la page dans quelques secondes."
             : `Ta commande a bien été reçue. ${shop.name} va la préparer rapidement.`}
         </p>
 

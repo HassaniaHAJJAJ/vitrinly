@@ -1,7 +1,8 @@
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { requireSeller } from "@/lib/supabase/require-seller";
 import { VariantsEditor } from "@/app/admin/boutiques/[shopId]/produits/VariantsEditor";
 import { DescriptionField } from "@/app/admin/boutiques/[shopId]/produits/DescriptionField";
+import { PhotosField } from "@/components/PhotosField";
 import { createProduct } from "./actions";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -19,9 +20,7 @@ export default async function NewProductSellerPage({
 
   return (
     <main className="mx-auto max-w-xl px-4 py-10">
-      <Link href="/dashboard/produits" className="text-sm text-gray-500 underline">
-        ← Mes produits
-      </Link>
+      <BackLink href="/dashboard/produits">Mes produits</BackLink>
 
       <h1 className="mb-6 mt-2 text-2xl font-semibold">Nouveau produit</h1>
 
@@ -31,7 +30,7 @@ export default async function NewProductSellerPage({
         </p>
       )}
 
-      <form action={createProduct} encType="multipart/form-data" className="flex flex-col gap-5">
+      <form action={createProduct} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1">
           <label htmlFor="name" className="text-base font-semibold">
             Nom du produit *
@@ -56,19 +55,8 @@ export default async function NewProductSellerPage({
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="photos" className="text-base font-semibold">
-            Photos
-          </label>
-          <input
-            id="photos"
-            name="photos"
-            type="file"
-            accept="image/*"
-            multiple
-            className="file:mr-3 file:rounded file:border-0 file:bg-gray-200 file:px-3 file:py-1.5 file:text-sm file:text-gray-700 hover:file:bg-gray-300"
-          />
-        </div>
+
+        <PhotosField />
 
         <VariantsEditor />
 

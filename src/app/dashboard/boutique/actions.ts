@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { requireSeller } from "@/lib/supabase/require-seller";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 
@@ -22,7 +23,12 @@ export async function updateShop(formData: FormData) {
   const whatsappNumber = String(formData.get("whatsapp_number") ?? "").trim();
   const mondialRelayPrice = parsePrice(formData.get("mondial_relay_price"));
   const chronopostPrice = parsePrice(formData.get("chronopost_price"));
+  const headerColor = String(formData.get("header_color") ?? "#f3f4f6");
   const logo = formData.get("logo");
+  const headerImage = formData.get("header_image");
+  const legalMentions = String(formData.get("legal_mentions") ?? "").trim();
+  const cgv = String(formData.get("cgv") ?? "").trim();
+  const privacyPolicy = String(formData.get("privacy_policy") ?? "").trim();
 
   const admin = createAdminClient();
 
@@ -35,11 +41,21 @@ export async function updateShop(formData: FormData) {
       .from("shop-assets")
       .upload(path, logo, { contentType: logo.type });
 
-    if (uploadError) {
-      redirect("/dashboard/boutique?error=logo_upload");
-    }
+    if (uploadError) redirect("/dashboard/boutique?error=logo_upload");
 
     logoUrl = admin.storage.from("shop-assets").getPublicUrl(path).data.publicUrl;
+  }
+
+  let headerImageUrl: string | undefined;
+  if (headerImage instanceof File && headerImage.size > 0 && shop) {
+    const path = `${shop.slug}/header-${Date.now()}-${headerImage.name}`;
+    const { error: uploadError } = await admin.storage
+      .from("shop-assets")
+      .upload(path, headerImage, { contentType: headerImage.type });
+
+    if (uploadError) redirect("/dashboard/boutique?error=header_upload");
+
+    headerImageUrl = admin.storage.from("shop-assets").getPublicUrl(path).data.publicUrl;
   }
 
   const { error: updateError } = await admin
@@ -53,13 +69,17 @@ export async function updateShop(formData: FormData) {
       whatsapp_number: whatsappNumber || null,
       mondial_relay_price: mondialRelayPrice,
       chronopost_price: chronopostPrice,
+      header_color: headerColor,
+      legal_mentions: legalMentions || null,
+      cgv: cgv || null,
+      privacy_policy: privacyPolicy || null,
       ...(logoUrl ? { logo_url: logoUrl } : {}),
+      ...(headerImageUrl ? { header_image_url: headerImageUrl } : {}),
     })
     .eq("id", shopId);
 
-  if (updateError) {
-    redirect("/dashboard/boutique?error=shop");
-  }
+  if (updateError) redirect("/dashboard/boutique?error=shop");
 
+  if (shop) revalidatePath(`/boutique/${shop.slug}`);
   redirect("/dashboard/boutique?saved=1");
 }

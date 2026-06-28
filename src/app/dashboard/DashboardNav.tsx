@@ -9,16 +9,19 @@ export function DashboardNav({
   shopName,
   logoUrl,
   shopSlug,
+  pendingReviewsCount = 0,
 }: {
   shopName: string;
   logoUrl?: string | null;
   shopSlug?: string | null;
+  pendingReviewsCount?: number;
 }) {
   const pathname = usePathname();
 
   const isCommandes = pathname === "/dashboard";
   const isProduits = pathname.startsWith("/dashboard/produits");
   const isBoutique = pathname.startsWith("/dashboard/boutique");
+  const isAvis = pathname.startsWith("/dashboard/avis");
 
   return (
     <div className="mb-6 border-b pb-4">
@@ -74,6 +77,19 @@ export function DashboardNav({
           }`}
         >
           Ma boutique
+        </Link>
+        <Link
+          href="/dashboard/avis"
+          className={`relative rounded px-3 py-1.5 text-sm ${
+            isAvis ? "bg-black text-white" : "text-gray-500 hover:bg-gray-100"
+          }`}
+        >
+          Avis
+          {pendingReviewsCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
+              {pendingReviewsCount}
+            </span>
+          )}
         </Link>
       </div>
     </div>

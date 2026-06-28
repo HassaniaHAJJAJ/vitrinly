@@ -49,10 +49,11 @@ export async function createOrderFromItems(
   const variantIds = items.map((item) => item.variantId);
   const { data: variants } = await admin
     .from("variants")
-    .select("id, size, color, products(id, name, price, shop_id)")
+    .select("id, size, color, stock, products(id, name, price, shop_id)")
     .in("id", variantIds);
 
   if (!variants || variants.length !== variantIds.length) {
+    console.error("[createOrder] variants not found. Got:", variants?.length, "expected:", variantIds.length);
     throw new Error("invalid_items");
   }
 
@@ -65,6 +66,10 @@ export async function createOrderFromItems(
 
     if (!variant || !product || product.shop_id !== shop.id || item.quantity < 1) {
       throw new Error("invalid_items");
+    }
+
+    if (variant.stock !== null && variant.stock < item.quantity) {
+      throw new Error("out_of_stock");
     }
 
     total += product.price * item.quantity;
@@ -101,12 +106,44 @@ export async function createOrderFromItems(
     .single();
 
   if (orderError || !order) {
+    console.error("[createOrder] orders insert failed:", orderError);
     throw new Error("order_creation_failed");
   }
 
   await admin
     .from("order_items")
     .insert(orderItemsToInsert.map((item) => ({ ...item, order_id: order.id })));
+
+  // Récupère les images pour l'email (requête séparée, ne bloque pas la commande)
+  const productIds = orderItemsToInsert.map((i) => i.product_id);
+  const { data: productImages } = await admin
+    .from("product_images")
+    .select("product_id, url, position")
+    .in("product_id", productIds)
+    .order("position");
+
+  const firstImageByProduct: Record<string, string> = {};
+  for (const img of productImages ?? []) {
+    if (!firstImageByProduct[img.product_id]) {
+      firstImageByProduct[img.product_id] = img.url;
+    }
+  }
+
+  const emailItems = orderItemsToInsert.map((item) => ({
+    ...item,
+    image_url: firstImageByProduct[item.product_id] ?? null,
+  }));
+
+  // Décrémente le stock de chaque variante commandée
+  for (const item of items) {
+    const variant = variants.find((v) => v.id === item.variantId);
+    if (variant?.stock !== null && variant?.stock !== undefined) {
+      await admin
+        .from("variants")
+        .update({ stock: Math.max(0, variant.stock - item.quantity) })
+        .eq("id", item.variantId);
+    }
+  }
 
   // Best-effort: notification emails should never block order creation,
   // which has already succeeded by this point.
@@ -134,7 +171,7 @@ export async function createOrderFromItems(
         buyerAddress: buyer.address,
         buyerZip: buyer.zip,
         buyerCity: buyer.city,
-        items: orderItemsToInsert,
+        items: emailItems,
         shippingMethod,
         shippingPrice,
         totalPrice: total + shippingPrice,

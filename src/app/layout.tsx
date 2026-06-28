@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vitrinly",
-  description: "Vends en ligne sans site web, avec Vitrinly.",
+  title: "Vitrineasy",
+  description: "Vends en ligne sans site web, avec Vitrineasy.",
 };
 
 export default function RootLayout({

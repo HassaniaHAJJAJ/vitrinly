@@ -32,7 +32,8 @@ export async function POST(request: Request) {
       paypalOrderId,
     });
     return NextResponse.json({ orderId });
-  } catch {
+  } catch (err) {
+    console.error("[capture] createOrderFromItems failed:", err);
     return NextResponse.json({ error: "order_creation_failed" }, { status: 500 });
   }
 }

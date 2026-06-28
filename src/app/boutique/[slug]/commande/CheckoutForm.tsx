@@ -37,15 +37,17 @@ export function CheckoutForm({
   accentColor,
   shippingOptions,
   stripeAvailable,
+  initialBuyer,
 }: {
   shopSlug: string;
   accentColor: string;
   shippingOptions: Partial<Record<ShippingMethod, number | null>>;
   stripeAvailable: boolean;
+  initialBuyer?: Buyer;
 }) {
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
-  const [buyer, setBuyer] = useState<Buyer>(EMPTY_BUYER);
+  const [buyer, setBuyer] = useState<Buyer>(initialBuyer ?? EMPTY_BUYER);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [redirectingToStripe, setRedirectingToStripe] = useState(false);

@@ -29,7 +29,7 @@ export default async function NewShopPage({
         </p>
       )}
 
-      <form action={createShop} encType="multipart/form-data" className="flex flex-col gap-5">
+      <form action={createShop} className="flex flex-col gap-5">
         <fieldset className="flex flex-col gap-4 rounded border p-4">
           <legend className="px-1 text-sm font-medium text-gray-600">Boutique</legend>
 
@@ -39,7 +39,7 @@ export default async function NewShopPage({
             name="slug"
             required
             placeholder="leila-mode"
-            hint="Boutique visible sur vitrinly.fr/boutique/leila-mode"
+            hint="Boutique visible sur vitrineasy.fr/boutique/leila-mode"
           />
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <ColorField
@@ -70,7 +70,7 @@ export default async function NewShopPage({
             label="Email PayPal de la cliente"
             name="paypal_email"
             type="email"
-            hint="Compte PayPal Business obligatoire (gratuit à créer, pas d'abonnement) — PayPal refuse de recevoir des paiements de tiers sur un compte Personal."
+            hint="Compte PayPal Business obligatoire (gratuit à créer, pas d'abonnement) ; PayPal refuse de recevoir des paiements de tiers sur un compte Personal."
           />
           <p className="rounded bg-blue-50 px-3 py-2 text-xs text-blue-900">
             PayPal prélève environ <strong>2,9 % + 0,35 €</strong> par vente. Exemple : pour une

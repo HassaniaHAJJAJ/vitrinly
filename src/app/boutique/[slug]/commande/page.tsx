@@ -1,7 +1,8 @@
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CheckoutForm } from "./CheckoutForm";
+import { getBuyerSession } from "@/lib/buyer-auth";
 
 export default async function CheckoutPage({
   params,
@@ -10,6 +11,7 @@ export default async function CheckoutPage({
 }) {
   const { slug } = await params;
   const supabase = await createClient();
+  const account = await getBuyerSession(slug);
 
   const { data: shop } = await supabase
     .from("shops")
@@ -29,9 +31,7 @@ export default async function CheckoutPage({
       style={{ backgroundColor: shop.background_color, color: shop.text_color }}
     >
       <main className="mx-auto max-w-2xl px-4 py-10">
-        <Link href={`/boutique/${shop.slug}/panier`} className="text-sm underline opacity-70">
-          ← Mon panier
-        </Link>
+        <BackLink href={`/boutique/${shop.slug}/panier`}>Mon panier</BackLink>
 
         <h1 className="mb-6 mt-2 text-2xl font-bold" style={{ color: shop.title_color }}>
           Passer commande
@@ -45,6 +45,15 @@ export default async function CheckoutPage({
             chronopost: shop.chronopost_price,
           }}
           stripeAvailable={shop.stripe_onboarding_complete}
+          initialBuyer={account ? {
+            firstname: account.firstname,
+            name: account.lastname,
+            email: account.email,
+            phone: account.phone ?? "",
+            address: account.address ?? "",
+            zip: account.zip ?? "",
+            city: account.city ?? "",
+          } : undefined}
         />
       </main>
     </div>

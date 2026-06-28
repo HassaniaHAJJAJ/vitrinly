@@ -10,7 +10,7 @@ export type CartItem = {
 };
 
 function cartKey(shopSlug: string) {
-  return `vitrinly_cart_${shopSlug}`;
+  return `vitrineasy_cart_${shopSlug}`;
 }
 
 export function getCart(shopSlug: string): CartItem[] {
@@ -25,7 +25,7 @@ export function getCart(shopSlug: string): CartItem[] {
 
 export function saveCart(shopSlug: string, items: CartItem[]) {
   window.localStorage.setItem(cartKey(shopSlug), JSON.stringify(items));
-  window.dispatchEvent(new Event("vitrinly-cart-updated"));
+  window.dispatchEvent(new Event("vitrineasy-cart-updated"));
 }
 
 export function addToCart(shopSlug: string, item: CartItem) {

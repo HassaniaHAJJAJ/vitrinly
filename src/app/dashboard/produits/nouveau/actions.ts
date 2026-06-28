@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireSeller } from "@/lib/supabase/require-seller";
 import { createAdminClient } from "@/lib/supabase/admin-client";
-import { slugify } from "@/lib/slugify";
+import { slugify, safeFilename } from "@/lib/slugify";
 
 async function generateUniqueProductSlug(
   admin: ReturnType<typeof createAdminClient>,
@@ -59,7 +59,7 @@ export async function createProduct(formData: FormData) {
     const imageRows = [];
     for (let i = 0; i < photos.length; i++) {
       const photo = photos[i];
-      const path = `${shopId}/products/${product.id}/${Date.now()}-${i}-${photo.name}`;
+      const path = `${shopId}/products/${product.id}/${Date.now()}-${i}-${safeFilename(photo.name)}`;
       const { error: uploadError } = await admin.storage
         .from("shop-assets")
         .upload(path, photo, { contentType: photo.type });
@@ -82,7 +82,7 @@ export async function createProduct(formData: FormData) {
       color: colors[i] ?? "",
       stock: Number.isFinite(stocks[i]) ? stocks[i] : 0,
     }))
-    .filter((v) => v.size && v.color);
+    .filter((v) => v.size || v.color);
 
   if (variantRows.length > 0) {
     await admin.from("variants").insert(variantRows);

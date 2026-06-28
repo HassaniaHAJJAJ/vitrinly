@@ -36,44 +36,53 @@ export function VariantsEditor({ initial }: { initial?: VariantRow[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-base font-semibold">Variantes (taille / couleur / stock)</p>
+      {/* En-têtes */}
+      <div className="grid grid-cols-[1fr_1fr_1px_100px_auto] items-center gap-2">
+        <span className="text-sm font-semibold">Taille</span>
+        <span className="text-sm font-semibold">Couleur</span>
+        <span />
+        <span className="text-sm font-semibold">Stock</span>
+        <span />
+      </div>
 
       {rows.map((row) => (
-        <div key={row.key} className="flex items-center gap-2">
+        <div key={row.key} className="grid grid-cols-[1fr_1fr_1px_100px_auto] items-center gap-2">
           <input
             type="text"
-            placeholder="Taille (ex: M)"
+            placeholder="ex : M"
             value={row.size}
             onChange={(e) => updateRow(row.key, "size", e.target.value)}
             name="sizes[]"
-            required
-            className="w-24 rounded border px-2 py-1.5 text-sm"
+
+            className="rounded border px-2 py-1.5 text-sm"
           />
           <input
             type="text"
-            placeholder="Couleur (ex: Noir)"
+            placeholder="ex : Noir"
             value={row.color}
             onChange={(e) => updateRow(row.key, "color", e.target.value)}
             name="colors[]"
-            required
-            className="w-32 rounded border px-2 py-1.5 text-sm"
+
+            className="rounded border px-2 py-1.5 text-sm"
           />
+          {/* Séparateur vertical */}
+          <div className="self-stretch bg-gray-200" />
           <input
             type="number"
             min={0}
-            placeholder="Stock"
+            placeholder="0"
             value={row.stock}
             onChange={(e) => updateRow(row.key, "stock", e.target.value)}
             name="stocks[]"
             required
-            className="w-20 rounded border px-2 py-1.5 text-sm"
+            className="rounded border px-2 py-1.5 text-sm"
           />
           <button
             type="button"
             onClick={() => removeRow(row.key)}
-            className="text-sm text-red-600"
+            className="text-sm text-red-500 hover:text-red-700"
           >
-            Retirer
+            ✕
           </button>
         </div>
       ))}
@@ -81,7 +90,7 @@ export function VariantsEditor({ initial }: { initial?: VariantRow[] }) {
       <button
         type="button"
         onClick={addRow}
-        className="w-fit rounded border px-3 py-1.5 text-sm"
+        className="w-fit rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
       >
         + Ajouter une variante
       </button>

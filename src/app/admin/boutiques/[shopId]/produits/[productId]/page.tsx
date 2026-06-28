@@ -1,10 +1,12 @@
-import Link from "next/link";
-import Image from "next/image";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 import { VariantsEditor } from "../VariantsEditor";
 import { DescriptionField } from "../DescriptionField";
+import { PhotosField } from "@/components/PhotosField";
+import { DeleteImagesField } from "@/components/DeleteImagesField";
 import { updateProduct, deleteProduct } from "./actions";
+import { deleteProductImageAdmin } from "./delete-image-action";
 
 const ERROR_MESSAGES: Record<string, string> = {
   missing_fields: "Merci de remplir le nom et un prix valide.",
@@ -48,9 +50,7 @@ export default async function EditProductPage({
 
   return (
     <main className="mx-auto max-w-xl px-4 py-10">
-      <Link href={`/admin/boutiques/${shopId}/produits`} className="text-sm text-gray-500 underline">
-        ← Retour aux produits
-      </Link>
+      <BackLink href={`/admin/boutiques/${shopId}/produits`}>Retour aux produits</BackLink>
 
       <h1 className="mb-6 mt-2 text-2xl font-semibold">Modifier le produit</h1>
 
@@ -62,7 +62,7 @@ export default async function EditProductPage({
 
       <form
         action={updateProductForItem}
-        encType="multipart/form-data"
+       
         className="flex flex-col gap-5"
       >
         <div className="flex flex-col gap-1">
@@ -96,42 +96,10 @@ export default async function EditProductPage({
           />
         </div>
 
-        {images.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <p className="text-base font-semibold">Photos actuelles</p>
-            <div className="flex flex-wrap gap-3">
-              {images.map((image) => (
-                <label key={image.id} className="flex flex-col items-center gap-1 text-xs">
-                  <Image
-                    src={image.url}
-                    alt=""
-                    width={80}
-                    height={80}
-                    className="h-20 w-20 rounded border object-cover"
-                  />
-                  <span className="flex items-center gap-1">
-                    <input type="checkbox" name="delete_images[]" value={image.id} />
-                    Supprimer
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="photos" className="text-base font-semibold">
-            Ajouter des photos
-          </label>
-          <input
-            id="photos"
-            name="photos"
-            type="file"
-            accept="image/*"
-            multiple
-            className="file:mr-3 file:rounded file:border-0 file:bg-gray-200 file:px-3 file:py-1.5 file:text-sm file:text-gray-700 hover:file:bg-gray-300"
-          />
-        </div>
+        <DeleteImagesField images={images} deleteAction={deleteProductImageAdmin} />
+
+        <PhotosField label="Ajouter des photos (max. 10)" />
 
         <VariantsEditor initial={variantRows} />
 

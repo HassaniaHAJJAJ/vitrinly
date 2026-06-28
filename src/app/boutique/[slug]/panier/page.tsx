@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CartView } from "./CartView";
@@ -27,9 +27,7 @@ export default async function CartPage({
       style={{ backgroundColor: shop.background_color, color: shop.text_color }}
     >
       <main className="mx-auto max-w-2xl px-4 py-10">
-        <Link href={`/boutique/${shop.slug}`} className="text-sm underline opacity-70">
-          ← {shop.name}
-        </Link>
+        <BackLink href={`/boutique/${shop.slug}`}>{shop.name}</BackLink>
 
         <h1 className="mb-6 mt-2 text-2xl font-bold" style={{ color: shop.title_color }}>
           Mon panier

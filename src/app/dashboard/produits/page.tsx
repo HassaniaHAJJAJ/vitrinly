@@ -6,7 +6,10 @@ import { DashboardNav } from "../DashboardNav";
 export default async function SellerProductsPage() {
   const { supabase, shopId } = await requireSeller();
 
-  const { data: shop } = await supabase.from("shops").select("name, slug, logo_url").eq("id", shopId).single();
+  const [{ data: shop }, { count: pendingReviewsCount }] = await Promise.all([
+    supabase.from("shops").select("name, slug, logo_url").eq("id", shopId).single(),
+    supabase.from("reviews").select("id", { count: "exact", head: true }).eq("shop_id", shopId).eq("status", "pending"),
+  ]);
 
   const { data: products } = await supabase
     .from("products")
@@ -16,7 +19,7 @@ export default async function SellerProductsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <DashboardNav shopName={shop?.name ?? ""} logoUrl={shop?.logo_url} shopSlug={shop?.slug} />
+      <DashboardNav shopName={shop?.name ?? ""} logoUrl={shop?.logo_url} shopSlug={shop?.slug} pendingReviewsCount={pendingReviewsCount ?? 0} />
       <div className="mb-6 flex justify-end">
         <Link
           href="/dashboard/produits/nouveau"

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/require-admin";
@@ -29,12 +30,10 @@ export default async function ShopProductsAdminPage({
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <Link href="/admin" className="text-sm text-gray-500 underline">
-        ← Toutes les boutiques
-      </Link>
+      <BackLink href="/admin">Toutes les boutiques</BackLink>
 
       <div className="mb-6 mt-2 flex items-center justify-between gap-6">
-        <h1 className="text-2xl font-semibold">Produits — {shop.name}</h1>
+        <h1 className="text-2xl font-semibold">Produits : {shop.name}</h1>
         <div className="flex items-center gap-4">
           <Link href={`/admin/boutiques/${shop.id}`} className="whitespace-nowrap text-sm underline">
             Modifier la boutique
